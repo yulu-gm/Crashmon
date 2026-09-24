@@ -1,0 +1,22 @@
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+.vite/
+playwright-report/
+test-results/
+
+# Local secrets and runtime data
+.env
+.env.*
+!.env.example
+/data/
+/backups/
+*.log
+
+# Editor / OS
+.idea/
+.DS_Store
+Thumbs.db
