@@ -1,3 +1,5 @@
+import { createRoom } from '../framework/room.js';
+import { canWalk, SPEED } from './shared/hub-map.js';
 import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -8,8 +10,11 @@ import { HttpError, credentials, hashPassword, verifyPassword, fields } from '..
 
 export function createApp({ databasePath = resolve('data/crashmon.sqlite'), origin, now = Date.now } = {}) {
   const store = openStore(databasePath, now, starters.map(p => p.id));
+  const room = createRoom({ now, authenticate: store.authenticate.bind(store), profile: store.player, canWalk, speed: SPEED });
   const assets = new Map([
     ['/', ['index.html', 'text/html; charset=utf-8']],
+    ['/hub-map.js', ['../shared/hub-map.js', 'text/javascript; charset=utf-8']],
+    ['/room-client.js', ['room-client.js', 'text/javascript; charset=utf-8']],
     ['/world.js', ['world.js', 'text/javascript; charset=utf-8']],
     ['/world.css', ['world.css', 'text/css; charset=utf-8']],
     ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
@@ -67,12 +72,20 @@ export function createApp({ databasePath = resolve('data/crashmon.sqlite'), orig
         if (!valid || !account?.active) throw new HttpError(401, '账号或密码不正确。');
         const session = store.createSession(account.id);
         // 同一浏览器重新登录时撤销旧 Cookie 对应会话，其他设备不受影响。
-        store.logout(secret);
+        store.logout(secret); room.disconnect(secret);
         json(res, 200, store.player(account.id), { 'Set-Cookie': cookie(session) }); return;
       }
       if (path === '/api/logout' && req.method === 'POST') {
-        fields(await readBody(req), []); store.logout(secret);
+        fields(await readBody(req), []); store.logout(secret); room.disconnect(secret);
         json(res, 200, { ok: true }, { 'Set-Cookie': cookie('', true) }); return;
+      }
+      if (['/api/room/join','/api/room/sync','/api/room/leave'].includes(path) && req.method === 'POST') {
+        const body = await readBody(req);
+        const id = store.authenticate(secret);
+        if (req.headers['x-crashmon-player'] !== id) throw new HttpError(409, '登录账号已改变，请重新登录。');
+        if (path === '/api/room/join') { fields(body,[]); json(res,200,room.join(id,secret)); return; }
+        if (path === '/api/room/sync') { json(res,200,room.sync(id,secret,body)); return; }
+        fields(body,['connectionId']); room.leave(id,secret,body.connectionId); json(res,200,{ok:true}); return;
       }
       if (path === '/api/starters' && req.method === 'GET') {
         store.authenticate(secret); json(res, 200, starters); return;

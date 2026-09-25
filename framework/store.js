@@ -91,13 +91,13 @@ export function openStore(path, now = Date.now, starterIds = []) {
       db.prepare('INSERT INTO sessions VALUES (?,?,?,?,?)').run(digest(secret), userId, time, time + 7 * DAY, time);
       return secret;
     },
-    authenticate(secret) {
+    authenticate(secret, touch = true) {
       if (!secret || !/^[\w-]{43}$/.test(secret)) throw new HttpError(401, '请重新登录。');
       const hash = digest(secret);
       const session = db.prepare(`SELECT s.user_id FROM sessions s JOIN accounts a ON a.id = s.user_id
         WHERE s.hash = ? AND s.expires_at > ? AND s.last_seen > ? AND a.active = 1`).get(hash, now(), now() - DAY);
       if (!session) throw new HttpError(401, '登录已失效，请重新登录。');
-      db.prepare('UPDATE sessions SET last_seen = ? WHERE hash = ?').run(now(), hash);
+      if (touch) db.prepare('UPDATE sessions SET last_seen = ? WHERE hash = ?').run(now(), hash);
       return session.user_id;
     },
     logout(secret) { if (secret) db.prepare('DELETE FROM sessions WHERE hash = ?').run(digest(secret)); },

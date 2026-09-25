@@ -20,6 +20,8 @@
 
 ## 当前工作入口
 
+当前多人能力见[共享据点](architecture/shared-hub.md)：同屏角色、移动同步、连接与离线处理。
+
 当前可运行内容及命令见[注册、登录与存档里程碑](architecture/account-save-milestone.md)。战斗暂缓收束，先验证账号与持久化闭环。
 
 [首次体验](game-design/first-session.md)、[核心玩法规则](game-design/core-rules.md)、[1.0 内容大纲](versions/1.0/outline.md)与[底层总览](architecture/foundation-design.md)共同收敛第一条可玩流程。

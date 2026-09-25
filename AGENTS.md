@@ -8,7 +8,7 @@
 
 ## 当前状态
 
-当前已有注册、登录与基础档案的本地原型，含 HTTP 接口、网页和隔离集成测试。运行命令与实现边界见 docs/architecture/account-save-milestone.md。另有二维据点、NPC 交互与一次性初始领宠实现，见 docs/game-design/hub-prototype.md。战斗、野外、CI 与部署尚未实现；不得把原型测试通过当作正式运营验收。用户已授权账号与存档、二维据点与初始领宠实现，不代表授权部署或修改生产数据。
+当前已有注册、登录与基础档案的本地原型，含 HTTP 接口、网页和隔离集成测试。运行命令与实现边界见 docs/architecture/account-save-milestone.md。另有二维据点、NPC 交互与一次性初始领宠实现，见 docs/game-design/hub-prototype.md。多人同屏据点已实现，见 docs/architecture/shared-hub.md。战斗、野外、CI 与部署尚未实现；不得把原型测试通过当作正式运营验收。用户已授权账号与存档、二维据点、初始领宠与多人同屏实现，不代表授权部署或修改生产数据。
 
 ## 设计与实现状态
 

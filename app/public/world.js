@@ -1,12 +1,4 @@
-// 据点移动是本地表现状态；宠物归属与领取资格来自服务端。
-const W = 960, H = 640;
-const npc = { x: 480, y: 282 };
-const obstacles = [
-  { x: 414, y: 33, w: 132, h: 48 },
-  { x: 105, y: 90, w: 185, h: 137 }, { x: 680, y: 115, w: 155, h: 112 },
-  { x: 96, y: 375, w: 215, h: 122 }, { x: 714, y: 382, w: 150, h: 100 },
-];
-const trees = [[61,101],[60,200],[58,302],[54,559],[156,571],[257,566],[769,560],[874,565],[903,307],[904,92],[817,65],[612,66],[350,63],[110,50],[893,451]];
+import { W, H, npc, trees } from './hub-map.js';
 const petColors = { starter_a: '#e9975e', starter_b: '#6eafa0', starter_c: '#a594d2' };
 
 export function drawPet(ctx, x, y, id, size = 1) {
@@ -28,46 +20,35 @@ export function drawPet(ctx, x, y, id, size = 1) {
   ctx.restore();
 }
 
-export function createWorld({ onInteract }) {
+export function createWorld({ onInteract, onMove }) {
   const canvas = document.querySelector('#world-canvas');
   const ctx = canvas.getContext('2d');
   const interact = document.querySelector('#interact');
   const root = document.querySelector('#world');
   const keys = new Set();
+  let connected = false, selfId = null, authoritative = null;
+  let peers = new Map();
   let active = false, frame = 0, last = 0, player, catalog = [], near = false, destination = null;
   let position = { x: 480, y: 452 }, scale = 1, offset = { x: 0, y: 0 }, viewport = { w: 960, h: 640 };
   const blocked = () => Boolean(document.querySelector('dialog[open]')) || document.hidden;
-  function canWalk(x, y) {
-    if (x < 36 || x > 924 || y < 66 || y > 598) return false;
-    if (obstacles.some(o => x > o.x - 12 && x < o.x + o.w + 12 && y > o.y - 8 && y < o.y + o.h + 8)) return false;
-    if (trees.some(([tx,ty]) => Math.hypot(x-tx,y-ty) < 22)) return false;
-    return Math.hypot(x-npc.x,y-npc.y) > 23;
-  }
   function updateNear() {
-    const next = Math.hypot(position.x-npc.x, position.y-npc.y) < 88;
+    const next = connected && Math.hypot(position.x-npc.x, position.y-npc.y) < 88;
     if (next !== near) { near = next; interact.hidden = !near; document.querySelector('#nearby-status').textContent = near ? '已靠近引导员，按 E 或点击交谈。' : ''; }
-  }
-  function move(dx,dy) {
-    const previous = { ...position };
-    if (canWalk(position.x+dx,position.y)) position.x += dx;
-    if (canWalk(position.x,position.y+dy)) position.y += dy;
-    updateNear();
-    if (destination && Math.hypot(position.x-previous.x,position.y-previous.y) < .01) destination = null;
   }
   function interactWithNpc() { if(active && near && !blocked()) { keys.clear(); destination = null; onInteract(); } }
   interact.onclick = interactWithNpc;
   const input = { w:[0,-1], arrowup:[0,-1], s:[0,1], arrowdown:[0,1], a:[-1,0], arrowleft:[-1,0], d:[1,0], arrowright:[1,0] };
   window.addEventListener('keydown', event => {
-    if(!active || blocked() || /INPUT|TEXTAREA|SELECT|BUTTON/.test(event.target.tagName)) return;
+    if(!active || !connected || blocked() || /INPUT|TEXTAREA|SELECT|BUTTON/.test(event.target.tagName)) return;
     const key=event.key.toLowerCase();
     if(key==='e') { event.preventDefault(); interactWithNpc(); return; }
-    if(input[key]) { event.preventDefault(); if(!keys.has(key)) move(input[key][0]*5,input[key][1]*5); keys.add(key); destination=null; }
+    if(input[key]) { event.preventDefault(); keys.add(key); destination=null; onMove({type:'direction',x:input[key][0],y:input[key][1]}); }
   });
   window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()));
-  const clear = () => { keys.clear(); destination=null; };
+  const clear = () => { keys.clear(); destination=null; onMove({type:'stop'}); };
   window.addEventListener('blur',clear);document.addEventListener('visibilitychange',clear);
   canvas.addEventListener('pointerdown',event=> {
-    if(!active || blocked()) return;
+    if(!active || !connected || blocked()) return;
     canvas.focus();
     const rect=canvas.getBoundingClientRect();
     const x=(event.clientX-rect.left-offset.x)/scale,y=(event.clientY-rect.top-offset.y)/scale;
@@ -94,9 +75,9 @@ export function createWorld({ onInteract }) {
     ellipse(x,y-27,30,32,'#4d8162');ellipse(x-11,y-35,24,25,'#5d9570');ellipse(x+10,y-40,22,23,'#74a47a');
     ellipse(x-6,y-50,9,4,'#8db48a');
   }
-  function person(x,y,npcPerson=false) {
+  function person(x,y,npcPerson=false,color='#578cb1') {
     ellipse(x,y+6,13,5,'#28433538');round(x-8,y-9,6,16,2,'#374f54');round(x+2,y-9,6,16,2,'#374f54');
-    round(x-12,y-28,24,24,7,npcPerson?'#e9d5a1':'#578cb1');
+    round(x-12,y-28,24,24,7,npcPerson?'#e9d5a1':color);
     round(x-17,y-23,6,16,3,'#e8bfa1');round(x+11,y-23,6,16,3,'#e8bfa1');
     ellipse(x,y-38,12,13,'#f0caaa');round(x-12,y-50,24,10,5,npcPerson?'#ece0be':'#354c62');
     if(npcPerson)round(x-18,y-44,36,5,2,'#d5bf87');
@@ -136,6 +117,15 @@ export function createWorld({ onInteract }) {
     // 以脚底纵坐标排序，主角经过树或 NPC 时遮挡关系一致。
     const actors=trees.map(([x,y])=>({y,draw:()=>tree(x,y)}));
     actors.push({y:npc.y,draw:()=>person(npc.x,npc.y,true)},{y:position.y,draw:()=>person(position.x,position.y)});
+    for(const peer of peers.values()) {
+      actors.push({y:peer.renderY,draw:()=>{
+        person(peer.renderX,peer.renderY,false,'#aa8098');
+        const name=[...peer.nickname].length>12?[...peer.nickname].slice(0,12).join('')+'…':peer.nickname;
+        ctx.font='600 10px system-ui';const width=ctx.measureText(name).width+14;
+        round(peer.renderX-width/2,peer.renderY-79,width,18,6,'#fffbeded');
+        label(name,peer.renderX,peer.renderY-66,'#674d64',10);
+      }});
+    }
     actors.sort((a,b)=>a.y-b.y).forEach(a=>a.draw());
     label('引导员',npc.x,npc.y+27,'#426753',11);
     if(!player?.pets?.length){const bob=player?.reducedMotion?0:Math.sin(time/400)*3;round(npc.x+23,npc.y-73+bob,20,24,7,'#fff7d6');label('!',npc.x+33,npc.y-55+bob,'#b58a42',17);}
@@ -147,14 +137,39 @@ export function createWorld({ onInteract }) {
   function tick(time) {
     if(!active)return;
     const dt=Math.min((time-last)/1000,.04);last=time;
-    if(!blocked()) {
+    if(connected && !blocked()) {
       let dx=0,dy=0;for(const key of keys){dx+=input[key][0];dy+=input[key][1];}
-      if(!dx&&!dy&&destination){dx=destination.x-position.x;dy=destination.y-position.y;if(Math.hypot(dx,dy)<4){destination=null;dx=dy=0;}}
-      const length=Math.hypot(dx,dy);if(length)move(dx/length*150*dt,dy/length*150*dt);
+      const length=Math.hypot(dx,dy);
+      if(length) onMove({type:'direction',x:dx/length,y:dy/length});
+      else if(destination){
+        if(Math.hypot(destination.x-position.x,destination.y-position.y)<4)destination=null;
+        onMove(destination?{type:'target',...destination}:{type:'stop'});
+      }else onMove({type:'stop'});
     }else clear();
+    const blend=1-Math.exp(-22*dt);
+    if(authoritative && connected){position.x+=(authoritative.x-position.x)*blend;position.y+=(authoritative.y-position.y)*blend;}
+    for(const p of peers.values()){p.renderX+=(p.x-p.renderX)*blend;p.renderY+=(p.y-p.renderY)*blend;}
+    updateNear();
     paint(time);frame=requestAnimationFrame(tick);
   }
   return {
+    roomSnapshot(data) {
+      const me=data.players.find(p=>p.id===data.selfId);
+      if(!me)return;
+      if(selfId!==data.selfId){position={x:me.x,y:me.y};clear();}
+      selfId=data.selfId;authoritative=me;
+      const next=new Map();
+      for(const p of data.players)if(p.id!==data.selfId){const old=peers.get(p.id);next.set(p.id,{...p,renderX:old?.renderX??p.x,renderY:old?.renderY??p.y});}
+      peers=next;
+      document.querySelector('#online-count').textContent=`据点在线 ${data.players.length} 人`;
+      document.querySelector('#online-names').textContent=data.players.map(p=>p.nickname+(p.id===data.selfId?'（你）':'')).join('、');
+    },
+    connection(state) {
+      connected=state==='online';
+      document.querySelector('#connection-state').textContent=({online:'已连接共享据点',connecting:'正在进入共享据点…',offline:'连接中断，正在重连…',replaced:'账号已在其他页面进入据点'})[state];
+      document.querySelector('#reconnect-room').hidden=state!=='replaced';
+      if(!connected){clear();peers.clear();selfId=null;authoritative=null;document.querySelector('#online-count').textContent='据点未连接';document.querySelector('#online-names').textContent='';updateNear();}
+    },
     show(data,definitions) {
       const changed=player?.userId!==data.userId;player=data;catalog=definitions;
       if(changed){position={x:480,y:452};clear();near=false;interact.hidden=true;}
@@ -165,7 +180,7 @@ export function createWorld({ onInteract }) {
       document.querySelector('#team-note').textContent=companion?'已入队 · 已自动保存':'靠近引导员后按 E 交谈';
       if(!active){active=true;resize();last=performance.now();frame=requestAnimationFrame(tick);}
     },
-    hide(){active=false;player=null;clear();cancelAnimationFrame(frame);root.hidden=true;document.querySelector('#nearby-status').textContent='';},
+    hide(){connected=false;selfId=null;authoritative=null;peers.clear();active=false;player=null;clear();cancelAnimationFrame(frame);root.hidden=true;document.querySelector('#nearby-status').textContent='';},
     focus(){canvas.focus();},
     nearNpc:()=>near,
   };

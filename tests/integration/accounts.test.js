@@ -188,3 +188,23 @@ test('v1 存档迁移保留账号、会话、偏好与保存回执，领取后�
   assert.equal((await f.request('/api/player', { method: 'PATCH', cookie: a.cookie, body: save('过期编辑',1) })).status, 409);
   assert.equal((await f.request('/api/player', { cookie: a.cookie })).body.pets.length, 1);
 });
+
+test('多人接口绑定登录身份，同屏移动、昵称更新、退出与账号停用可见', async t => {
+  let now=Date.now();const f=await fixture(t,{now:()=>now});await f.register();await f.register('room_two');
+  const a=await f.login(),b=await f.login('room_two');
+  const post=(cookie,path,body)=>f.request(path,{method:'POST',cookie,body});
+  assert.equal((await post(undefined,'/api/room/join',{})).status,401);
+  const ja=await post(a.cookie,'/api/room/join',{}),jb=await post(b.cookie,'/api/room/join',{});
+  assert.equal(jb.body.players.length,2);
+  assert.equal((await post(b.cookie,'/api/room/sync',{connectionId:ja.body.connectionId,sequence:0,input:{type:'stop'}})).status,409);
+  await post(a.cookie,'/api/room/sync',{connectionId:ja.body.connectionId,sequence:0,input:{type:'direction',x:1,y:0}});now+=200;
+  const s=await post(b.cookie,'/api/room/sync',{connectionId:jb.body.connectionId,sequence:0,input:{type:'stop'}});
+  assert.ok(s.body.players.find(p=>p.id===ja.body.selfId).x>ja.body.players[0].x);
+  await f.request('/api/player',{method:'PATCH',cookie:a.cookie,body:save('同屏昵称')});
+  const named=await post(b.cookie,'/api/room/sync',{connectionId:jb.body.connectionId,sequence:1,input:{type:'stop'}});
+  assert.ok(named.body.players.some(p=>p.nickname==='同屏昵称'));
+  await post(a.cookie,'/api/logout',{});
+  assert.equal((await post(b.cookie,'/api/room/sync',{connectionId:jb.body.connectionId,sequence:2,input:{type:'stop'}})).body.players.length,1);
+  f.app.store.db.prepare('UPDATE accounts SET active=0 WHERE id=?').run(b.body.userId);
+  assert.equal((await post(b.cookie,'/api/room/sync',{connectionId:jb.body.connectionId,sequence:3,input:{type:'stop'}})).status,401);
+});

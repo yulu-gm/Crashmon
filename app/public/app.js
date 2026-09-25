@@ -1,3 +1,4 @@
+import { createRoomClient } from './room-client.js';
 import { createWorld, drawPet } from './world.js';
 const $ = selector => document.querySelector(selector);
 let mode = 'login';
@@ -11,19 +12,20 @@ let confirmation = false;
 let claiming = false;
 $('#profile-dialog').append($('#profile'));
 document.body.append($('#status'));
-const world = createWorld({ onInteract: openStarter });
+const world = createWorld({ onInteract: openStarter, onMove: input => room.input(input) });
+const room = createRoomClient({ api, snapshot: data => world.roomSnapshot(data), state: state => world.connection(state), expired: error => { showAuth(); status(error.message,true); } });
 const status = (text = '', error = false) => {
   ($('#profile-dialog').open ? $('#profile-dialog') : document.body).append($('#status'));
   $('#status').textContent = text; $('#status').classList.toggle('error', error);
 };
-async function api(path, method = 'GET', body) {
-  const response = await fetch(path, { method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Crashmon-Request': '1', ...(player ? { 'X-Crashmon-Player': player.userId } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+async function api(path, method = 'GET', body, options = {}) {
+  const response = await fetch(path, { method, signal: options.signal, keepalive: options.keepalive ?? false, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Crashmon-Request': '1', ...(player ? { 'X-Crashmon-Player': player.userId } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
   const data = await response.json();
   if (!response.ok) { const error = new Error(data.error); error.status = response.status; throw error; }
   return data;
 }
 function showAuth() {
-  world.hide(); document.body.classList.remove('in-world');
+  room.stop(); world.hide(); document.body.classList.remove('in-world');
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
   catalog = []; selected = null; claimRequest = null;
   player = null; pendingSave = null;
@@ -32,9 +34,11 @@ function showAuth() {
   $('#profile').hidden = true; $('#auth').hidden = false;
 }
 function showPlayer(data) {
+  const entering=player?.userId!==data.userId;
   player = data;
   document.body.classList.add('in-world');
   world.show(data, catalog);
+  if(entering)room.start();
   $('#auth').hidden = true; $('#profile').hidden = false;
   $('#auth-form').reset();
   $('#greeting').textContent = `你好，${data.nickname}`;
@@ -110,6 +114,8 @@ await action(async () => {
 });
 
 
+$('#reconnect-room').onclick=()=>room.start();
+window.addEventListener('pagehide',()=>room.stop());
 $('#open-profile').onclick = () => { status(); $('#profile-dialog').showModal(); };
 $('#close-profile').onclick = () => $('#profile-dialog').close();
 $('#profile-dialog').addEventListener('close', () => { document.body.append($('#status')); status(); world.focus(); });

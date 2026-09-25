@@ -9,6 +9,6 @@
     "dev": "node --watch app/server.js",
     "invite": "node scripts/invite.js",
     "test": "node --test tests/integration/*.test.js",
-    "check": "node --check app/server.js && node --check framework/store.js && node --check framework/auth.js && node --check app/public/app.js && node --check app/public/world.js && node --check content/pets/starters.js"
+    "check": "node --check app/server.js && node --check framework/store.js && node --check framework/auth.js && node --check app/public/app.js && node --check app/public/world.js && node --check content/pets/starters.js && node --check framework/room.js && node --check app/shared/hub-map.js && node --check app/public/room-client.js"
   }
 }
