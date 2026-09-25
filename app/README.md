@@ -1,5 +1,5 @@
 # 应用入口与装配
 
-未来放客户端、服务端启动入口与当前内容组合的装配。不是新增游戏架构层，不要求拆成多个服务。
+`server.js` 提供本地 HTTP 服务和明确列出的静态资源；`public/` 为注册、登录与冒险档案网页。网页不持有数据库或密码哈希，不用 localStorage 保存会话。
 
-当前没有应用代码。见[底层设计](../docs/architecture/foundation-design.md)；技术栈确认前不生成绑定代码和依赖工程。
+在仓库根目录运行 `npm start`。详细参数、接口与限制见[首个实现里程碑](../docs/architecture/account-save-milestone.md)。`world.js` 提供二维据点表现，初始伙伴定义由服务端装配；战斗仍未实现。见[据点原型](../docs/game-design/hub-prototype.md)。

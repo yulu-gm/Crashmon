@@ -1,0 +1,14 @@
+{
+  "name": "crashmon",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "start": "node app/server.js",
+    "dev": "node --watch app/server.js",
+    "invite": "node scripts/invite.js",
+    "test": "node --test tests/integration/*.test.js",
+    "check": "node --check app/server.js && node --check framework/store.js && node --check framework/auth.js && node --check app/public/app.js && node --check app/public/world.js && node --check content/pets/starters.js"
+  }
+}

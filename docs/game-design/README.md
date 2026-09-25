@@ -7,3 +7,5 @@
 这里回答玩家如何游玩；技术执行放在 [architecture/](../architecture/README.md)，具体宠物与活动放在 [content/](../content/README.md)，版本范围放在 [versions/](../versions/README.md)。
 
 目前没有冻结的完整战斗规则或数值体系。
+
+本地可玩进展：[二维据点与初始伙伴原型](hub-prototype.md)。

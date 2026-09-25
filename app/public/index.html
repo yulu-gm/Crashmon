@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crashmon · 冒险档案</title>
+  <link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/world.css"><script src="/app.js" type="module"></script>
+</head>
+<body>
+  <header><a href="/" class="brand"><span class="mark">C</span> CRASHMON</a><span class="badge">早期体验</span></header>
+  <section id="world" hidden aria-label="初始据点">
+    <canvas id="world-canvas" tabindex="0" aria-label="二维俯视据点。使用 WASD 或方向键移动，也可点击地面移动。引导员位于广场北侧，靠近后按 E 交谈。"></canvas>
+    <div class="world-top"><div class="place"><small>CRASHMON / FIRST JOURNEY</small><strong>初始据点</strong><p id="objective"></p></div><div class="world-actions"><span id="world-name"></span><button id="open-profile" type="button">冒险档案</button></div></div>
+    <div class="world-bottom"><div class="team-card"><small>我的伙伴</small><strong id="team-name"></strong><p id="team-note"></p></div><div class="controls"><kbd>WASD / ↑↓←→</kbd> 移动 · 点击地面也可移动<br><kbd>E</kbd> 交谈 · <kbd>Esc</kbd> 关闭对话</div></div>
+    <button id="interact" hidden type="button">E · 与引导员交谈</button><span id="nearby-status" role="status" aria-live="polite"></span>
+  </section>
+  <dialog id="starter-dialog" aria-labelledby="starter-title">
+    <div class="dialog-head"><span class="eyebrow">引导员 · 第一位伙伴</span><button class="close-dialog" id="close-starter" aria-label="关闭伙伴对话" type="button">×</button></div>
+    <h2 id="starter-title">每段冒险，都从相遇开始。</h2><p class="dialog-copy" id="starter-copy">先认识它们，再选一位与你出发。你可以来回比较，不必急着决定。</p>
+    <div id="starter-choices"><div class="starter-grid" id="starter-grid"></div><div id="starter-detail" class="starter-detail">选择一位伙伴，看看它的特点。</div></div>
+    <div id="starter-confirm" hidden class="starter-detail"></div>
+    <p id="starter-error" class="dialog-error" role="alert"></p>
+    <div class="dialog-foot"><p id="starter-note">外观与定位为原型占位。每个账号只能领取一次，最终确认后不能重选。</p><button id="back-to-choices" class="secondary" hidden type="button">返回比较</button><button id="choose-starter" class="primary" type="button" disabled>选择这位伙伴</button></div>
+  </dialog>
+  <dialog id="profile-dialog" aria-label="冒险档案"><button id="close-profile" class="text-button return-world" type="button">← 返回据点</button></dialog>
+  <main>
+    <section class="intro"><p class="eyebrow">每一次出发，都有迹可循</p><h1>下一次冒险，<br>从这里继续。</h1><p>建立你的冒险档案。保存的昵称与偏好，会在下次登录时与你重逢。</p><div class="journey"><span>01 创建账号</span><span>02 保存档案</span><span>03 再次启程</span></div><div class="landscape" aria-hidden="true"><div class="sun"></div><div class="hill back"></div><div class="hill front"></div><span class="flag">⚑</span><div class="trail"></div></div><p class="caption">冒险尚在准备中，先安放属于你的档案。</p></section>
+    <section class="panel">
+      <div id="auth" hidden>
+        <div class="tabs" role="group" aria-label="账号操作"><button id="login-tab" class="selected" type="button" aria-pressed="true">登录</button><button id="register-tab" type="button" aria-pressed="false">创建账号</button></div>
+        <h2 id="auth-title">欢迎回来</h2><p id="auth-description" class="muted">登录后，继续查看你的冒险档案。</p>
+        <form id="auth-form">
+          <label>账号<input name="username" autocomplete="username" required pattern="[a-zA-Z0-9_]{3,24}" minlength="3" maxlength="24" placeholder="3–24 位字母、数字或下划线"></label>
+          <label>密码<input name="password" type="password" autocomplete="current-password" required maxlength="128" placeholder="输入你的密码"></label>
+          <label id="invite-field" hidden>邀请码<input name="invite" autocomplete="off" placeholder="输入收到的一次性邀请码"></label>
+          <button id="auth-submit" class="primary" type="submit">登录并读取档案 <span>→</span></button>
+        </form>
+        <p class="fine">每个账号拥有独立档案。请妥善保管密码，当前体验暂不提供密码找回。</p>
+      </div>
+      <div id="profile" hidden>
+        <div class="profile-heading"><span class="eyebrow">你的冒险档案</span><button id="logout" type="button" class="text-button">退出登录</button></div>
+        <h2 id="greeting"></h2><p class="muted">先设定你的称呼和游玩偏好。</p>
+        <form id="profile-form">
+          <label>冒险者昵称<input name="nickname" required maxlength="24" autocomplete="nickname"></label>
+          <label class="toggle"><span>开启声音<small>为后续冒险保留声音偏好</small></span><input name="soundEnabled" type="checkbox"></label>
+          <label class="toggle"><span>减少动态效果<small>偏好更平静的画面呈现</small></span><input name="reducedMotion" type="checkbox"></label>
+          <button class="primary" type="submit">保存档案 <span>↗</span></button>
+        </form>
+        <div class="saved"><span class="dot"></span><span id="saved-time"></span></div>
+        <button id="reload" class="text-button" type="button">重新读取已保存档案</button>
+        <div class="next"><span>下一站</span><strong>认识你的第一位伙伴</strong><p>前往据点广场，与引导员交谈并选择伙伴。</p></div>
+      </div>
+      <p id="status" role="status" aria-live="polite">正在读取登录状态…</p>
+    </section>
+  </main>
+  <footer><span>CRASHMON / 冒险的起点</span><span>你的每次保存，都会留待下次出发。</span></footer>
+</body>
+</html>

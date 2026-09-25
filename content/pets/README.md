@@ -3,3 +3,5 @@
 未来按稳定 ID 放宠物定义、必要技能逻辑和素材。目前没有具体宠物代码。
 
 规格见 [docs/content/pets/](../../docs/content/pets/README.md)。宠物长期依赖不能随获宠活动退场丢失；长期保留也不等于在公共流程增加宠物身份特判。
+
+当前 `starters.js` 提供 A/B/C 三只占位初始伙伴定义，由 app 装配；技能和数值待后续设计。见[二维据点原型](../../docs/game-design/hub-prototype.md)。
