@@ -34,6 +34,8 @@ npm start
 | 设计用户数据、资产结算与存档 | [玩家数据与持久化](docs/architecture/player-data-and-persistence.md) |
 | 设计全局玩法规则 | [核心玩法规则](docs/game-design/core-rules.md) |
 | 设计首次冒险与 NPC 领宠流程 | [首次体验](docs/game-design/first-session.md) |
+| 定义美术、幽默表达与查看参考图 | [美术方向 v1](docs/game-design/art-direction-v1.md) |
+| 讨论首章宇宙探索内容 | [首章内容提案](docs/versions/1.0/universe-content-proposal.md) |
 | 规划游戏 1.0 | [1.0 内容大纲](docs/versions/1.0/outline.md) |
 | 设计具体宠物和活动 | [内容设计](docs/content/README.md) |
 | 查确认记录与待决项 | [设计决策](docs/decisions/README.md) |
@@ -66,6 +68,8 @@ docs/
 多人体验方法与范围见[共享据点说明](docs/architecture/shared-hub.md)：两个独立浏览器登录不同账号、连接同一个本地服务。
 
 ## 下一步
+
+题材与视觉方向现已进入讨论：宇宙探索、细线与柔和色块的复古幻想场景、性格幽默的伙伴。先用少量样张验证，再逐步替换占位素材；参考截图仅用于文档，不作为运行素材或授权证明。具体首章名称、种族与配色仍为提案。
 
 按本轮方向，先验证账号与存档闭环；战斗规则暂缓收束。[首次体验工作稿](docs/game-design/first-session.md)保留为后续地图、NPC 领宠与冒险实现的设计输入。
 

@@ -9,6 +9,8 @@
 | 玩家怎样注册、登录、退出和找回账号？ | [账号与会话](architecture/accounts-and-sessions.md) |
 | 玩家资产怎样保存、授权、结算和恢复？ | [玩家数据与持久化](architecture/player-data-and-persistence.md) |
 | 初次进入后怎样移动、领宠、探索并组成小队？ | [首次体验](game-design/first-session.md) |
+| 美术与幽默如何统一，参考图在哪里？ | [美术方向 v1](game-design/art-direction-v1.md)、[参考来源](game-design/references/README.md) |
+| 首章宇宙探索题材如何连接已有流程？ | [首章内容提案](versions/1.0/universe-content-proposal.md) |
 | 玩家如何组队、行动、捕捉和成长？ | [game-design/](game-design/README.md) |
 | 某只宠物怎样设计？ | [content/pets/](content/pets/README.md) |
 | 某个活动怎么玩、如何退场？ | [content/activities/](content/activities/README.md) |
@@ -29,6 +31,8 @@
 账号和玩家数据的详细边界已拆为两个有实际需求的专题，底层总览只保留职责和链接。上述文档目前均为 Draft，不是正式接口或已实现能力。
 
 ## 单一正文与引用
+
+视觉语言、角色表达、幽默边界与跨版本制作基准维护在 game-design/art-direction-v1.md；参考图与来源只放在其 references/ 目录，不作为游戏资产。首章主题与内容组合提案放在 versions/1.0/universe-content-proposal.md；正式宠物与地图规格确认后分别进入 docs/content/，不复制多套正文。
 
 护盾在玩法上怎样计算写进核心玩法规则；服务器怎样执行和保存写进底层设计；某只宠物提供多少护盾写进宠物设计；1.0 是否包含它写进版本大纲。
 
