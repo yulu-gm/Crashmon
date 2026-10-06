@@ -40,7 +40,7 @@ function mainFrame(dt){const {w,h}=setup(canvas,ctx);ground(ctx,w,h);const actor
   else {shadow(ctx,x,y,28);drawCharacter(ctx,actor,x,y,state,{height,guides});frame=motionFrame(state,4);}
   ctx.strokeStyle='#b9a274';ctx.beginPath();ctx.moveTo(w*.63,25);ctx.lineTo(w*.63,h-25);ctx.stroke();
   const sampleState=(combat||battleIdle)?{...state,direction:'east',moving:false}:state;const smallHeight=characterAssets[actor].worldHeight;
-  shadow(ctx,w*.81,y,15);drawCharacter(ctx,actor,w*.81,y,sampleState,{guides,height:smallHeight});
+  shadow(ctx,w*.81,y,15);if(combat){const clip=characterAssets.flame.battle[action];drawFrame(ctx,clip,frame,w*.81,y,smallHeight,[.5,.88],guides);}else if(battleIdle){const clip=characterAssets.flame.battle.idle;drawFrame(ctx,clip,clip.frame,w*.81,y,smallHeight,[.5,.88],guides);}else drawCharacter(ctx,actor,w*.81,y,sampleState,{guides,height:smallHeight});
   text(ctx,(combat||battleIdle)?'战斗形象 / 固定向右':'放大检查',x,h-18);text(ctx,'实际显示尺寸',w*.81,h-18);
   $('frame-label').textContent=`帧 ${frame+1} / ${combat||action==='walk'?4:1}${paused?' · 已暂停':''}`;
   canvas.dataset.frame=frame;canvas.dataset.action=action;

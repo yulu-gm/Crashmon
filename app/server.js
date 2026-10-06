@@ -6,12 +6,20 @@ import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { starters } from '../content/pets/starters.js';
 import { openStore } from '../framework/store.js';
+import { createBattleStore } from '../framework/battle-store.js';
+import { catalog } from '../content/pets/catalog.js';
+import { encounters } from '../content/encounters/index.js';
 import { HttpError, credentials, hashPassword, verifyPassword, fields } from '../framework/auth.js';
 
 export function createApp({ databasePath = resolve('data/crashmon.sqlite'), origin, now = Date.now } = {}) {
   const store = openStore(databasePath, now, starters.map(p => p.id));
+  const battles = createBattleStore({ store, catalog, encounters, now });
   const room = createRoom({ now, authenticate: store.authenticate.bind(store), profile: store.player, canWalk, speed: SPEED });
   const assets = new Map([
+    ...['battle-client.js','battle-renderer.js','creature-animation.js','creature-lab.js'].map(file => [`/${file}`, [file, 'text/javascript; charset=utf-8']]),
+    ['/creature-lab', ['creature-lab.html', 'text/html; charset=utf-8']],
+    ['/creature-lab.css', ['creature-lab.css', 'text/css; charset=utf-8']],
+    ['/battle.css', ['battle.css', 'text/css; charset=utf-8']],
     ['/minimap.js', ['minimap.js', 'text/javascript; charset=utf-8']],
     ['/scene-layout.js', ['scene-layout.js', 'text/javascript; charset=utf-8']],
     ['/scene-renderer.js', ['scene-renderer.js', 'text/javascript; charset=utf-8']],
@@ -29,6 +37,7 @@ export function createApp({ databasePath = resolve('data/crashmon.sqlite'), orig
     ...['player/model','player/walk-south','player/walk-north','player/walk-west','player/walk-east',
       'flame/model','flame/walk-south','flame/walk-north','flame/walk-west','flame/walk-east','flame/tackle','flame/sneeze']
       .map(name=>[`/assets/characters/${name}.png`,[`assets/characters/${name}.png`,'image/png']]),
+    ...['turtle','bird','scout','shell'].flatMap(id=>['model','poses'].map(name=>[`/assets/characters/${id}/${name}.png`,[`assets/characters/${id}/${name}.png`,'image/png']])),
     ['/assets/hub-coast.png', ['assets/hub-coast.png', 'image/png']],
     ['/assets/expedition-sprites.png', ['assets/expedition-sprites.png', 'image/png']],
     ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -106,6 +115,22 @@ export function createApp({ databasePath = resolve('data/crashmon.sqlite'), orig
         if (path === '/api/room/sync') { json(res,200,room.sync(id,secret,body)); return; }
         fields(body,['connectionId']); room.leave(id,secret,body.connectionId); json(res,200,{ok:true}); return;
       }
+      if (path === '/api/battle-content' && req.method === 'GET') {
+        store.authenticate(secret);
+        json(res, 200, { pets: Object.values(catalog).filter(p => starters.some(s => s.id === p.id) || p.id === 'wild_scout' || p.id === 'wild_shell'), encounters: Object.values(encounters) }); return;
+      }
+      if (path === '/api/battle' && req.method === 'GET') {
+        json(res, 200, battles.get(store.authenticate(secret))); return;
+      }
+      if ((['/api/battle/start','/api/battle/action','/api/battle/abandon','/api/supplies'].includes(path) && req.method === 'POST') || (path === '/api/team' && req.method === 'PATCH')) {
+        const body = await readBody(req); const id = store.authenticate(secret);
+        if (req.headers['x-crashmon-player'] !== id) throw new HttpError(409, '登录账号已改变，请重新读取档案。');
+        const result = path === '/api/battle/start' ? battles.start(id, body)
+          : path === '/api/battle/action' ? battles.action(id, body)
+          : path === '/api/battle/abandon' ? battles.action(id, body, true)
+          : path === '/api/team' ? battles.team(id, body) : battles.supplies(id, body);
+        json(res, 200, result); return;
+      }
       if (path === '/api/starters' && req.method === 'GET') {
         store.authenticate(secret); json(res, 200, starters); return;
       }
@@ -134,7 +159,7 @@ export function createApp({ databasePath = resolve('data/crashmon.sqlite'), orig
   server.requestTimeout = 15000;
   server.headersTimeout = 10000;
   return {
-    server, store, setOrigin(value) { origin = value; },
+    server, store, battles, setOrigin(value) { origin = value; },
     async close() {
       await new Promise((done, reject) => server.close(error => error ? reject(error) : done()));
       store.close();

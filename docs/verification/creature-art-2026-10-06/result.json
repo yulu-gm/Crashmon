@@ -1,0 +1,15 @@
+{
+  "cases": 40,
+  "errors": [],
+  "overflow": false,
+  "battleOverflow": false,
+  "reducedPose": "idle",
+  "basic": [
+    "starter_b_basic",
+    "wild_shell_basic"
+  ],
+  "cover": [
+    "starter_b_cover",
+    "wild_shell_basic"
+  ]
+}

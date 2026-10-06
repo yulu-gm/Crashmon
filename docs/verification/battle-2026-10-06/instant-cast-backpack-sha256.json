@@ -1,0 +1,8 @@
+{
+  "scope": "点击目标即释放与Crashmon背包",
+  "files": {
+    "app/public/battle-client.js": "d04391c1166435a21a533b305a16d2bd52fb61bf65d845fa655d4ace71d3db67",
+    "app/public/battle.css": "98690064fb5620b4d3346ed2515959b27face94b53e1badfb9ae2b44369feb16",
+    "docs/game-design/battle-ui.md": "740b55d3b692f6f73d5f9abef45bfde1cea7384d0b9a6364f11d40db1767e82a"
+  }
+}

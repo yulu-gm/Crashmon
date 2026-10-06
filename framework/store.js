@@ -16,7 +16,7 @@ export function openStore(path, now = Date.now, starterIds = []) {
     catch (error) { db.exec('ROLLBACK'); throw error; }
   };
   const version = db.prepare('PRAGMA user_version').get().user_version;
-  if (version > 2) { db.close(); throw new Error('数据库版本比当前代码新，请使用匹配版本。'); }
+  if (version > 3) { db.close(); throw new Error('数据库版本比当前代码新，请使用匹配版本。'); }
   if (version === 0) transaction(() => db.exec(`
     CREATE TABLE accounts (
       id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL,
@@ -58,14 +58,27 @@ export function openStore(path, now = Date.now, starterIds = []) {
     ) STRICT;
     PRAGMA user_version = 2;
   `));
+  if (version < 3) transaction(() => db.exec(`
+    ALTER TABLE pet_instances ADD COLUMN active_position INTEGER;
+    ALTER TABLE pet_instances ADD COLUMN experience INTEGER NOT NULL DEFAULT 0;
+    UPDATE pet_instances SET active_position = team_position WHERE team_position < 4;
+    CREATE UNIQUE INDEX pet_active_position ON pet_instances(owner_id, active_position);
+    CREATE TABLE battle_accounts (
+      user_id TEXT PRIMARY KEY REFERENCES accounts(id), capture_ball INTEGER NOT NULL DEFAULT 0 CHECK(capture_ball >= 0),
+      potion INTEGER NOT NULL DEFAULT 0 CHECK(potion >= 0), supplies_claimed INTEGER NOT NULL DEFAULT 0,
+      tutorial_completed INTEGER NOT NULL DEFAULT 0
+    ) STRICT;
+    PRAGMA user_version = 3;
+  `));
   const player = id => {
     const row = db.prepare('SELECT * FROM players WHERE user_id = ?').get(id);
-    const pets = db.prepare('SELECT id, definition_id AS definitionId, team_position AS teamPosition FROM pet_instances WHERE owner_id = ? ORDER BY team_position').all(id).map(p => ({ ...p }));
+    const pets = db.prepare('SELECT id, definition_id AS definitionId, active_position AS teamPosition, experience FROM pet_instances WHERE owner_id = ? ORDER BY active_position IS NULL, active_position, team_position').all(id).map(p => ({ ...p }));
     const claimed = db.prepare('SELECT user_id FROM starter_claims WHERE user_id = ?').get(id);
-    return { pets, userId: row.user_id, nickname: row.nickname, soundEnabled: Boolean(row.sound_enabled), reducedMotion: Boolean(row.reduced_motion), onboarding: claimed ? 'starter_received' : 'awaiting_starter', revision: row.revision, savedAt: row.updated_at };
+    const assets = db.prepare('SELECT * FROM battle_accounts WHERE user_id = ?').get(id);
+    return { pets, team: pets.filter(p => p.teamPosition !== null).map(p => p.id), inventory: { captureBall: assets?.capture_ball ?? 0, potion: assets?.potion ?? 0 }, suppliesClaimed: Boolean(assets?.supplies_claimed), tutorialCompleted: Boolean(assets?.tutorial_completed), userId: row.user_id, nickname: row.nickname, soundEnabled: Boolean(row.sound_enabled), reducedMotion: Boolean(row.reduced_motion), onboarding: claimed ? 'starter_received' : 'awaiting_starter', revision: row.revision, savedAt: row.updated_at };
   };
   return {
-    db,
+    db, transaction,
     close: () => db.close(),
     createInvite() {
       const secret = token(); const expiresAt = now() + 7 * DAY;
@@ -112,7 +125,7 @@ export function openStore(path, now = Date.now, starterIds = []) {
           return existing.request_id === body.requestId ? JSON.parse(existing.result) : player(id);
         }
         const petId = randomUUID();
-        db.prepare('INSERT INTO pet_instances VALUES (?,?,?,?,?)').run(petId, id, body.definitionId, 0, now());
+        db.prepare('INSERT INTO pet_instances(id,owner_id,definition_id,team_position,created_at,active_position) VALUES (?,?,?,?,?,?)').run(petId, id, body.definitionId, 0, now(), 0);
         db.prepare('INSERT INTO starter_claims VALUES (?,?,?,?,?)').run(id, petId, body.definitionId, body.requestId, '{}');
         db.prepare('UPDATE players SET revision = revision + 1, updated_at = ? WHERE user_id = ?').run(now(), id);
         const result = player(id);

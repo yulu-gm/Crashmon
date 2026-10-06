@@ -177,9 +177,9 @@ test('v1 存档迁移保留账号、会话、偏好与保存回执，领取后�
   const body = save('旧版本旅人');
   const saved = await f.request('/api/player', { method: 'PATCH', cookie: a.cookie, body });
   // 还原上一个里程碑的真实 v1 表结构；新表尚无数据。
-  f.app.store.db.exec('DROP TABLE starter_claims; DROP TABLE pet_instances; PRAGMA user_version = 1;');
+  f.app.store.db.exec('DROP TABLE battle_captures; DROP TABLE battle_settlements; DROP TABLE battle_first_wins; DROP TABLE battle_receipts; DROP TABLE battles; DROP TABLE battle_accounts; DROP TABLE starter_claims; DROP TABLE pet_instances; PRAGMA user_version = 1;');
   await f.restart();
-  assert.equal(f.app.store.db.prepare('PRAGMA user_version').get().user_version, 2);
+  assert.equal(f.app.store.db.prepare('PRAGMA user_version').get().user_version, 3);
   assert.deepEqual((await f.request('/api/player', { cookie: a.cookie })).body, saved.body);
   assert.deepEqual((await f.request('/api/player', { method: 'PATCH', cookie: a.cookie, body })).body, saved.body);
   const options = (await f.request('/api/starters', { cookie: a.cookie })).body;

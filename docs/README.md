@@ -23,15 +23,17 @@
 
 ## 当前工作入口
 
+下一阶段范围见 [P0 物品、背包、经济、商店与精灵养成计划](versions/1.0/p0-items-economy-growth-plan.md)。用户已指定系统方向；文档为计划草案，具体参数与进化规模尚未冻结，本轮仅归档计划。
+
 当前多人能力见[共享据点](architecture/shared-hub.md)：同屏角色、移动同步、连接与离线处理。
 
-当前美术实现见[角色动画样本](art/character-sample.md)与[营地场景模块](art/scene-modules.md)：四方向角色、独立物件、遮挡与免登录检查页。
+当前美术实现见[角色动画样本](art/character-sample.md)、[伙伴素材生产流程与 skill](art/creature-pipeline.md)与[营地场景模块](art/scene-modules.md)：五只伙伴的地图待机和战斗演出、角色行走、独立物件、遮挡与免登录检查页。
 
-当前账号内容及命令见[注册、登录与存档里程碑](architecture/account-save-milestone.md)。2026-10-06 已恢复战斗设计推进，当前输入是[战斗原型基线 B0](game-design/battle-system.md)；不再把此前“暂缓战斗收束”当作当前限制。
+当前账号内容及命令见[注册、登录与存档里程碑](architecture/account-save-milestone.md)。2026-10-06 已完成首版[战斗 B0](game-design/battle-system.md)本地实现，含五只伙伴、遭遇卡片、捕捉和资产事务；见[框架说明](architecture/battle-framework.md)、[战斗界面](game-design/battle-ui.md)与[独立验收](verification/battle-2026-10-06.md)。
 
 [首次体验](game-design/first-session.md)、[核心玩法规则](game-design/core-rules.md)、[1.0 内容大纲](versions/1.0/outline.md)与[底层总览](architecture/foundation-design.md)共同收敛第一条可玩流程。
 
-账号和玩家数据的详细边界已拆为两个有实际需求的专题，底层总览只保留职责和链接。设计状态、已有局部实现与实际验证分别记录；战斗文档存在不等于战斗已经可玩。
+账号和玩家数据的详细边界已拆为两个有实际需求的专题，底层总览只保留职责和链接。设计状态、已有局部实现与实际验证分别记录；当前本地 PvE 可玩；完整野外、升级进化和部署仍未完成，不能以局部测试代替完整 B01–B30 验收。
 
 ## 单一正文与引用
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Crashmon 伙伴素材生产"
+  short_description: "制作一致的伙伴形象与动作，校准采样框、比例和锚点并接入游戏检查台"
+  default_prompt: "使用 $crashmon-sprite-production 为 Crashmon 制作伙伴标准形象、战斗动作和地图待机，校准并验证后接入游戏。"

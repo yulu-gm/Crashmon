@@ -1,5 +1,7 @@
+import { createBattleClient } from './battle-client.js';
+import { drawMonster,monsterImagesReady } from './battle-renderer.js';
 import { createRoomClient } from './room-client.js';
-import { createWorld, drawPet } from './world.js';
+import { createWorld } from './world.js';
 const $ = selector => document.querySelector(selector);
 let mode = 'login';
 let player = null;
@@ -18,6 +20,7 @@ const status = (text = '', error = false) => {
   ($('#profile-dialog').open ? $('#profile-dialog') : document.body).append($('#status'));
   $('#status').textContent = text; $('#status').classList.toggle('error', error);
 };
+const expedition = createBattleClient({api,getPlayer:()=>player,setPlayer:showPlayer,onExpired:error=>{showAuth();status(error.message,true);}});
 async function api(path, method = 'GET', body, options = {}) {
   const response = await fetch(path, { method, signal: options.signal, keepalive: options.keepalive ?? false, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Crashmon-Request': '1', ...(player ? { 'X-Crashmon-Player': player.userId } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
   const data = await response.json();
@@ -25,7 +28,7 @@ async function api(path, method = 'GET', body, options = {}) {
   return data;
 }
 function showAuth() {
-  room.stop(); world.hide(); document.body.classList.remove('in-world');
+  expedition.hide(); room.stop(); world.hide(); document.body.classList.remove('in-world');
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
   catalog = []; selected = null; claimRequest = null;
   player = null; pendingSave = null;
@@ -36,8 +39,9 @@ function showAuth() {
 function showPlayer(data) {
   const entering=player?.userId!==data.userId;
   player = data;
+  queueMicrotask(()=>expedition.sync());
   document.body.classList.add('in-world');
-  world.show(data, catalog);
+  world.show(data, [...new Map([...catalog,...expedition.definitions()].map(p=>[p.id,p])).values()]);
   if(entering)room.start();
   $('#auth').hidden = true; $('#profile').hidden = false;
   $('#auth-form').reset();
@@ -67,12 +71,12 @@ function setMode(value) {
 }
 async function action(fn) {
   if (busy) return;
-  busy = true; document.querySelectorAll('button, input').forEach(el => el.disabled = true);
+  busy = true; document.querySelectorAll('#auth button, #auth input, #profile button, #profile input').forEach(el => el.disabled = true);
   try { await fn(); }
   catch (error) {
     if (error.status === 401) showAuth();
     status(error.status ? error.message : '暂时无法连接。保存可能已完成，请重试原保存或重新读取档案。', true);
-  } finally { busy = false; document.querySelectorAll('button, input').forEach(el => el.disabled = false); }
+  } finally { busy = false; document.querySelectorAll('#auth button, #auth input, #profile button, #profile input').forEach(el => el.disabled = false); }
 }
 $('#login-tab').onclick = () => setMode('login');
 $('#register-tab').onclick = () => setMode('register');
@@ -131,8 +135,8 @@ function openStarter() {
   $('#choose-starter').disabled=!owned;
   $('#choose-starter').textContent=owned?'继续探索':'选择这位伙伴';
   $('#starter-title').textContent=owned?'伙伴已经在你的队伍里。':'每段冒险，都从相遇开始。';
-  $('#starter-copy').textContent=owned?'很高兴再次见到你。可以在据点自由走走，野外探索将在后续开放。':'先认识它们，再选一位与你出发。你可以来回比较，不必急着决定。';
-  $('#starter-note').textContent=owned?'伙伴已自动保存，退出或重新登录都不会丢失。':'伙伴定位与技能仍在开发。每个账号只能领取一次，最终确认后不能重选。';
+  $('#starter-copy').textContent=owned?'很高兴再次见到你。点击「探索 · 伙伴」前往野外，认识新的伙伴。':'先认识它们，再选一位与你出发。你可以来回比较，不必急着决定。';
+  $('#starter-note').textContent=owned?'伙伴已自动保存，退出或重新登录都不会丢失。':'三位伙伴都有独特技能。每个账号只能领取一次，最终确认后不能重选。';
   if(owned) $('#starter-confirm').textContent=`${catalog.find(p=>p.id===owned.definitionId)?.name ?? owned.definitionId} · 已加入队伍`;
   else renderChoices();
   $('#starter-dialog').showModal();
@@ -142,12 +146,12 @@ function renderChoices() {
   $('#starter-detail').textContent='选择一位伙伴，看看它的特点。';
   for(const pet of catalog) {
     const button=document.createElement('button');button.type='button';button.className='starter-card';button.setAttribute('aria-pressed','false');button.setAttribute('aria-label',`${pet.name}，${pet.role}`);
-    const preview=document.createElement('canvas');preview.width=180;preview.height=110;preview.setAttribute('aria-hidden','true');drawPet(preview.getContext('2d'),90,62,pet.id,2.4);
+    const preview=document.createElement('canvas');preview.width=180;preview.height=128;preview.setAttribute('aria-hidden','true');const paintPortrait=()=>{const ctx=preview.getContext('2d');ctx.clearRect(0,0,180,128);drawMonster(ctx,90,112,pet.id,1.2);};paintPortrait();monsterImagesReady.then(()=>{if(preview.isConnected)paintPortrait();});
     const name=document.createElement('strong');name.textContent=pet.name;
     const role=document.createElement('span');role.textContent=pet.role;button.append(preview,name,role);
     button.onclick=()=>{
       selected=pet;claimRequest=null;grid.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
-      $('#starter-detail').textContent=pet.description;const detail=document.createElement('small');detail.textContent=pet.feature;$('#starter-detail').append(detail);$('#choose-starter').disabled=false;
+      $('#starter-detail').textContent=pet.description;const detail=document.createElement('small');detail.textContent=pet.stats?`生命 ${pet.stats.hp} · 攻击 ${pet.stats.atk} · 防御 ${pet.stats.def} · 速度 ${pet.stats.spd}`:pet.feature;$('#starter-detail').append(detail);for(const skill of [pet.basic,...(pet.skills??[])].filter(Boolean)){const line=document.createElement('small');line.textContent=`${skill.name} · ${skill.cost} 战术点：${skill.description}`;$('#starter-detail').append(line);}$('#choose-starter').disabled=false;
     };grid.append(button);
   }
 }

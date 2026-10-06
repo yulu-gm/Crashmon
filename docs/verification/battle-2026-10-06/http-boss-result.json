@@ -1,0 +1,32 @@
+{
+  "outcome": "victory",
+  "totalTurns": 33,
+  "continuedActions": 24,
+  "party": [
+    {
+      "species": "starter_c",
+      "experience": 60
+    },
+    {
+      "species": "wild_shell",
+      "experience": 60
+    },
+    {
+      "species": "wild_scout",
+      "experience": 50
+    },
+    {
+      "species": "wild_scout",
+      "experience": 50
+    }
+  ],
+  "reward": {
+    "experiencePerParticipant": 50,
+    "captureBall": 1
+  },
+  "inventory": {
+    "captureBall": 8,
+    "potion": 0
+  },
+  "bossGroupAttackObserved": true
+}

@@ -1,0 +1,32 @@
+{
+  "outcome": "victory",
+  "playerActions": 17,
+  "totalTurns": 25,
+  "hp": [
+    {
+      "species": "starter_c",
+      "hp": 91
+    },
+    {
+      "species": "wild_shell",
+      "hp": 0
+    },
+    {
+      "species": "wild_scout",
+      "hp": 100
+    },
+    {
+      "species": "wild_scout",
+      "hp": 100
+    }
+  ],
+  "inventory": {
+    "captureBall": 9,
+    "potion": 0
+  },
+  "reward": {
+    "experiencePerParticipant": 20,
+    "captureBall": 1
+  },
+  "firstActionReplayIdentical": true
+}

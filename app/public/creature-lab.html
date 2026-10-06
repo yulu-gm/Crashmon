@@ -1,0 +1,13 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crashmon · 伙伴动作检查台</title><link rel="stylesheet" href="/creature-lab.css"><script type="module" src="/creature-lab.js"></script></head><body>
+<header><a href="/">◒ CRASHMON</a><nav><a href="/animation-lab">行走样本</a><a href="/scene-lab">营地场景</a></nav></header>
+<main><aside><p class="eyebrow">伙伴形象与动作 · 第二轮</p><h1>星野小队，集合。</h1><p>检查各自的待机、普攻和两个技能。暂停后可拖动时间轴，左右朝向与四方向地图形象分别检查。</p>
+<label>伙伴<select id="species"><option value="starter_b">苔伞龟</option><option value="starter_c">星签雀</option><option value="wild_scout">巡游仔</option><option value="wild_shell">收纳仔</option><option value="starter_a">火焰伙伴 · starter_a</option></select></label>
+<label>动作<select id="action"></select></label><label>战斗朝向<select id="facing"><option value="1">向右 · 我方</option><option value="-1">向左 · 敌方</option></select></label>
+<label>速度<input id="speed" type="range" min="0.25" max="2" step="0.25" value="1"></label>
+<div class="buttons"><button id="pause">暂停</button><button id="restart">重播</button><button id="step">下一姿势</button></div>
+<label>时间轴 <output id="clock">0 ms</output><input id="seek" type="range" min="0" max="900" step="10" value="0"></label>
+<label class="toggle"><input id="guides" type="checkbox">采样框与固定落脚点</label><label class="toggle"><input id="reduce" type="checkbox">减少动态效果</label>
+<p id="status" role="status">正在载入伙伴素材…</p><p class="note">当前为可试玩的候选素材。检查页不结算战斗，不发放伙伴或修改存档。</p></aside>
+<section><div class="panel"><div class="panel-head"><strong id="title">苔伞龟</strong><span id="pose"></span></div><canvas id="preview" aria-label="放大动作与实际游戏尺寸预览"></canvas><p class="caption">左：放大动作　右：战斗显示尺寸</p></div>
+<div class="panel"><div class="panel-head"><strong>地图待机 · 四个真实视角</strong><span>正面 / 背面 / 左 / 右</span></div><canvas id="map" aria-label="四方向地图待机"></canvas></div>
+<div class="panel"><div class="panel-head"><strong>四对四 · 同一套战场布局</strong><button id="formation-play">播放本动作</button></div><div id="formation-wrap"><canvas id="formation" aria-label="桌面与窄屏队形检查"></canvas><div id="formation-labels"></div></div><p class="caption">姓名、生命条与角色间距一起检查；此处是表现样本。</p></div></section></main></body></html>
