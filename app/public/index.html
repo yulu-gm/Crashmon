@@ -9,7 +9,7 @@
   <header><a href="/" class="brand"><span class="mark">C</span> CRASHMON</a><span class="badge">早期体验</span></header>
   <section id="world" hidden aria-label="初始据点">
     <canvas id="world-canvas" tabindex="0" aria-label="二维俯视据点。使用 WASD 或方向键移动，也可点击地面移动。引导员位于广场北侧，靠近后按 E 交谈。"></canvas>
-    <div class="world-top"><div class="place"><small>CRASHMON / FIRST JOURNEY</small><strong>初始据点</strong><p id="objective"></p><p id="connection-state" role="status"></p><details class="online-roster"><summary id="online-count">据点未连接</summary><p id="online-names"></p></details><button id="reconnect-room" hidden type="button">在此页面重新进入</button></div><div class="world-actions"><span id="world-name"></span><button id="open-profile" type="button">冒险档案</button></div></div>
+    <div class="world-top"><div class="place"><small>◒ CRASHMON / 星野研究站</small><strong>星野营地 · 赤沙海岸</strong><p id="objective"></p><p id="connection-state" role="status"></p><details class="online-roster"><summary id="online-count">据点未连接</summary><p id="online-names"></p></details><button id="reconnect-room" hidden type="button">在此页面重新进入</button></div><div class="world-actions"><div class="world-tools"><span id="world-name"></span><button id="open-profile" type="button">冒险档案</button></div><div class="mini-map"><div><strong>◒ 星野营地</strong><small>据点图</small></div><canvas id="world-minimap" width="192" height="128" aria-label="营地小地图，金色箭头是你，白点是引导员"></canvas><p>● 引导员　<span>▲ 你</span></p></div></div></div>
     <div class="world-bottom"><div class="team-card"><small>我的伙伴</small><strong id="team-name"></strong><p id="team-note"></p></div><div class="controls"><kbd>WASD / ↑↓←→</kbd> 移动 · 点击地面也可移动<br><kbd>E</kbd> 交谈 · <kbd>Esc</kbd> 关闭对话</div></div>
     <button id="interact" hidden type="button">E · 与引导员交谈</button><span id="nearby-status" role="status" aria-live="polite"></span>
   </section>
@@ -19,7 +19,7 @@
     <div id="starter-choices"><div class="starter-grid" id="starter-grid"></div><div id="starter-detail" class="starter-detail">选择一位伙伴，看看它的特点。</div></div>
     <div id="starter-confirm" hidden class="starter-detail"></div>
     <p id="starter-error" class="dialog-error" role="alert"></p>
-    <div class="dialog-foot"><p id="starter-note">外观与定位为原型占位。每个账号只能领取一次，最终确认后不能重选。</p><button id="back-to-choices" class="secondary" hidden type="button">返回比较</button><button id="choose-starter" class="primary" type="button" disabled>选择这位伙伴</button></div>
+    <div class="dialog-foot"><p id="starter-note">伙伴定位与技能仍在开发。每个账号只能领取一次，最终确认后不能重选。</p><button id="back-to-choices" class="secondary" hidden type="button">返回比较</button><button id="choose-starter" class="primary" type="button" disabled>选择这位伙伴</button></div>
   </dialog>
   <dialog id="profile-dialog" aria-label="冒险档案"><button id="close-profile" class="text-button return-world" type="button">← 返回据点</button></dialog>
   <main>

@@ -1,0 +1,14 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crashmon · 动画检查台</title><link rel="stylesheet" href="/animation-lab.css"><script type="module" src="/animation-lab.js"></script></head><body>
+<header><a href="/">◒ CRASHMON</a><span>美术样本 / 动画检查台</span></header>
+<main><aside><p class="eyebrow">样本 01 · 宇航员与火焰伙伴</p><h1>先让角色走起来。</h1><p class="copy">四方向地图动作与固定朝向战斗演出。此页只验证表现，不结算伤害或发放宠物。</p>
+<label>角色<select id="actor"><option value="astronaut">宇航员</option><option value="flame">火焰伙伴 · starter_a</option></select></label>
+<label>朝向<select id="direction"><option value="south">向下 / 正面</option><option value="north">向上 / 背面</option><option value="west">向左</option><option value="east">向右</option></select></label>
+<label>动作<select id="action"><option value="idle">待机</option><option value="walk">行走循环</option><option value="battle-idle">战斗待机 · 独立形象</option><option value="tackle">普通撞击 · 战斗</option><option value="sneeze">特色喷嚏 · 战斗</option></select></label>
+<label>播放速度 <output id="speed-label">1×</output><input id="speed" type="range" min="0.25" max="2" step="0.25" value="1"></label>
+<label class="toggle"><input id="guides" type="checkbox" checked>显示画布、落脚点与发射挂点</label>
+<div class="buttons"><button id="pause">暂停</button><button id="restart">从头播放</button><button id="step">下一帧</button></div>
+<p id="asset-status" role="status">正在载入素材…</p><p class="copy">素材状态：候选样本，等待外观与动作品质评审。方向切换保留步态进度；行走按位移累计。</p></aside>
+<section class="stage"><div class="stage-head"><span id="stage-label">宇航员 / 向下 / 待机</span><span id="frame-label"></span></div><canvas id="lab-canvas" aria-label="角色动画放大预览与实际尺寸对比"></canvas><div class="stage-foot"><span>左侧：动作检查　右侧：游戏实际尺寸</span><span>青色十字 = 固定世界落脚点</span></div>
+<div class="walk-panel"><strong>移动与碰撞样本</strong><p>点击沙地或使用 WASD / 方向键。撞墙时停止行走；伙伴跟随并转身。</p><canvas id="walk-canvas" tabindex="0" aria-label="可移动角色与独立障碍物样本"></canvas></div></section></main>
+<footer>保留现有宠物身份与存档 · 地图动作和战斗演出独立 · <a href="/">返回营地</a></footer>
+</body></html>

@@ -1,7 +1,22 @@
-import { W, H, npc, trees } from './hub-map.js';
+import { W, H, npc } from './hub-map.js';
+import { loadSceneImages,drawSceneGround,drawSceneShadows,sceneRenderables,drawSceneLabels } from './scene-renderer.js';
+import { createMinimap } from './minimap.js';
+import { createMotion, advanceMotion } from './character-motion.js';
+import { loadCharacterImages, drawCharacter } from './character-renderer.js';
+loadCharacterImages();
+loadSceneImages();
+const sprites = new Image(); sprites.src = '/assets/expedition-sprites.png';
+function sprite(ctx, index, x, y, width, height) {
+  if (!sprites.complete || !sprites.naturalWidth) return false;
+  const sw=sprites.naturalWidth/3, sh=sprites.naturalHeight/2;
+  const inset=sw*.045;
+  ctx.drawImage(sprites,(index%3)*sw+inset,Math.floor(index/3)*sh,sw-inset*2,sh,x-width/2,y-height,width,height);
+  return true;
+}
 const petColors = { starter_a: '#e9975e', starter_b: '#6eafa0', starter_c: '#a594d2' };
 
 export function drawPet(ctx, x, y, id, size = 1) {
+  if(sprite(ctx, {starter_a:0,starter_b:1,starter_c:2}[id]??0,x,y+14*size,44*size,44*size)) return;
   ctx.save(); ctx.translate(x, y); ctx.scale(size, size);
   ctx.fillStyle = '#244b4930'; ctx.beginPath(); ctx.ellipse(0, 9, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = petColors[id] ?? '#e9975e';
@@ -23,9 +38,12 @@ export function drawPet(ctx, x, y, id, size = 1) {
 export function createWorld({ onInteract, onMove }) {
   const canvas = document.querySelector('#world-canvas');
   const ctx = canvas.getContext('2d');
+  const paintMinimap=createMinimap(document.querySelector('#world-minimap'));
   const interact = document.querySelector('#interact');
   const root = document.querySelector('#world');
   const keys = new Set();
+  let playerMotion=createMotion('south'), petMotion=createMotion('east');
+  let petPosition={x:438,y:476};
   let connected = false, selfId = null, authoritative = null;
   let peers = new Map();
   let active = false, frame = 0, last = 0, player, catalog = [], near = false, destination = null;
@@ -58,7 +76,7 @@ export function createWorld({ onInteract, onMove }) {
   function resize() {
     const rect = canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1,2);
     viewport={w:rect.width,h:rect.height};canvas.width=Math.round(rect.width*dpr);canvas.height=Math.round(rect.height*dpr);
-    scale=rect.width<650?Math.max(rect.width/600,rect.height/800):Math.min(rect.width/W,rect.height/H);
+    scale=rect.width<650?Math.max(rect.width/600,rect.height/H):Math.max(rect.width/W,rect.height/H);
     updateCamera();
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
@@ -70,12 +88,10 @@ export function createWorld({ onInteract, onMove }) {
   function ellipse(x,y,rx,ry,color) { ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill(); }
   function round(x,y,w,h,r,color) { ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill(); }
   function label(text,x,y,color='#365f50',size=12) { ctx.font=`600 ${size}px system-ui`;ctx.textAlign='center';ctx.fillStyle=color;ctx.fillText(text,x,y); }
-  function tree(x,y) {
-    ellipse(x+5,y+10,30,12,'#355d4324');round(x-5,y-14,10,30,3,'#8f7953');
-    ellipse(x,y-27,30,32,'#4d8162');ellipse(x-11,y-35,24,25,'#5d9570');ellipse(x+10,y-40,22,23,'#74a47a');
-    ellipse(x-6,y-50,9,4,'#8db48a');
-  }
-  function person(x,y,npcPerson=false,color='#578cb1') {
+  function person(x,y,npcPerson=false,color='#578cb1',motion=playerMotion) {
+    ellipse(x,y+2,15,5,'#353d4350');
+    if(!npcPerson && drawCharacter(ctx,'astronaut',x,y,motion,{reducedMotion:player?.reducedMotion})) return;
+    if(sprite(ctx,npcPerson?4:3,x,y+5,65,65)) return;
     ellipse(x,y+6,13,5,'#28433538');round(x-8,y-9,6,16,2,'#374f54');round(x+2,y-9,6,16,2,'#374f54');
     round(x-12,y-28,24,24,7,npcPerson?'#e9d5a1':color);
     round(x-17,y-23,6,16,3,'#e8bfa1');round(x+11,y-23,6,16,3,'#e8bfa1');
@@ -84,55 +100,39 @@ export function createWorld({ onInteract, onMove }) {
     ctx.fillStyle='#384d49';ctx.fillRect(x-5,y-37,2,3);ctx.fillRect(x+3,y-37,2,3);
     if(!npcPerson){round(x-9,y-21,18,11,4,'#d8aa6b');round(x-5,y-19,10,5,2,'#c38d53');}
   }
-  function house(x,y,w,h,name,color) {
-    round(x+9,y+12,w,h,8,'#46684722');round(x,y+30,w,h-25,8,'#f5ecd2');
-    round(x-8,y+5,w+16,49,9,color);round(x-8,y+43,w+16,8,3,'#395e5730');
-    for(let i=14;i<w;i+=22){ctx.fillStyle='#ffffff16';ctx.fillRect(x+i,y+10,3,30);}
-    round(x+w/2-15,y+h-42,30,48,5,'#6a6658');round(x+18,y+64,30,25,5,'#99c4c0');round(x+w-48,y+64,30,25,5,'#99c4c0');
-    label(name,x+w/2,y+h+24,'#426553',11);
-  }
   function paint(time) {
     updateCamera();
-    ctx.clearRect(0,0,viewport.w,viewport.h);ctx.fillStyle='#b4c9a3';ctx.fillRect(0,0,viewport.w,viewport.h);
+    ctx.clearRect(0,0,viewport.w,viewport.h);ctx.fillStyle='#526c7b';ctx.fillRect(0,0,viewport.w,viewport.h);
     ctx.save();ctx.translate(offset.x,offset.y);ctx.scale(scale,scale);
-    round(18,28,924,588,35,'#cad6ac');round(28,38,904,568,30,'#bbd19f');
-    for(let i=0;i<250;i++){const x=38+(i*137)%885,y=48+(i*79)%550;ctx.fillStyle=i%3?'#95b77e33':'#e8edbd55';ctx.fillRect(x,y,3,2);}
-    round(365,53,230,543,26,'#e1d9b5');round(76,248,810,91,26,'#e1d9b5');
-    round(342,230,276,169,48,'#e9e1c4');
-    for(let i=0;i<9;i++)round(430+(i%2)*8,411+i*19,95,13,5,'#d7cda94d');
-    // 上方出口本轮关闭，不制造通往尚未实现内容的假入口。
-    round(414,44,132,28,5,'#b9a57a');label('野外 · 筹备中',480,64,'#5f6047',12);
-    for(let i=0;i<6;i++)round(413+i*25,33,6,48,2,'#9c8964');
-    house(105,90,185,137,'休息屋','#729b91');house(680,115,155,112,'伙伴研究站','#bd9675');
-    ellipse(202,438,112,70,'#9cb995');ellipse(202,435,99,57,'#76b6b9');ellipse(202,428,90,48,'#90c8c3');
-    for(let i=0;i<4;i++){ctx.strokeStyle='#c4e3d1';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(171+i*20,415+i*8,15,3,0,0,Math.PI);ctx.stroke();}
-    for(const [x,y] of [[144,470],[271,413],[116,409]]){ellipse(x,y,12,6,'#6e9c80');ellipse(x-2,y-2,4,3,'#eccebf');}
-    round(714,382,150,100,16,'#aac489');
-    for(let i=0;i<5;i++){round(728+i*26,404,10,48,3,'#d5d89a');ellipse(733+i*26,406,8,10,['#e7b78c','#e4d4a2'][i%2]);}
-    label('伙伴花圃',787,509,'#5f7955',11);
-    round(360,178,240,28,9,'#92ac7d');
-    for(let i=0;i<3;i++){ellipse(409+i*70,206,22,8,'#e7e3c9');drawPet(ctx,409+i*70,197,catalog[i]?.id,1.05);}
-    label('初始伙伴',480,152,'#4a694f',11);
-    for(const [x,y] of [[346,355],[635,355]]) { round(x,y,45,13,3,'#ae9669');round(x+5,y+10,4,10,1,'#8b7a58');round(x+36,y+10,4,10,1,'#8b7a58'); }
-    // 以脚底纵坐标排序，主角经过树或 NPC 时遮挡关系一致。
-    const actors=trees.map(([x,y])=>({y,draw:()=>tree(x,y)}));
+    drawSceneGround(ctx,time,{reducedMotion:player?.reducedMotion});
+    drawSceneShadows(ctx);
+    // 常驻伙伴展示保持原有定义与领取流程。
+    for(let i=0;i<catalog.length;i++)drawPet(ctx,410+i*70,210,catalog[i].id,1.25);
+    // 建筑、沿海物件、角色和伙伴使用同一地面排序点。
+    const actors=sceneRenderables(ctx,time,{reducedMotion:player?.reducedMotion});
     actors.push({y:npc.y,draw:()=>person(npc.x,npc.y,true)},{y:position.y,draw:()=>person(position.x,position.y)});
     for(const peer of peers.values()) {
       actors.push({y:peer.renderY,draw:()=>{
-        person(peer.renderX,peer.renderY,false,'#aa8098');
+        person(peer.renderX,peer.renderY,false,'#aa8098',peer.motion);
         const name=[...peer.nickname].length>12?[...peer.nickname].slice(0,12).join('')+'…':peer.nickname;
         ctx.font='600 10px system-ui';const width=ctx.measureText(name).width+14;
         round(peer.renderX-width/2,peer.renderY-79,width,18,6,'#fffbeded');
         label(name,peer.renderX,peer.renderY-66,'#674d64',10);
       }});
     }
+    if(player?.pets?.length){const id=player.pets[0].definitionId;actors.push({y:petPosition.y,draw:()=>{
+      ellipse(petPosition.x,petPosition.y+2,13,4,'#353d4350');
+      if(id!=='starter_a' || !drawCharacter(ctx,'flame',petPosition.x,petPosition.y,petMotion,{reducedMotion:player?.reducedMotion})) drawPet(ctx,petPosition.x,petPosition.y-12,id,1.3);
+    }});}
     actors.sort((a,b)=>a.y-b.y).forEach(a=>a.draw());
-    label('引导员',npc.x,npc.y+27,'#426753',11);
+    drawSceneLabels(ctx);
+    label('引导员 · 莱娅',npc.x,npc.y+24,'#343d46',11);
     if(!player?.pets?.length){const bob=player?.reducedMotion?0:Math.sin(time/400)*3;round(npc.x+23,npc.y-73+bob,20,24,7,'#fff7d6');label('!',npc.x+33,npc.y-55+bob,'#b58a42',17);}
     if(near){ctx.strokeStyle='#fff4c1';ctx.lineWidth=2;ctx.setLineDash([4,5]);ctx.beginPath();ctx.ellipse(npc.x,npc.y+7,27,12,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
     if(destination){ctx.strokeStyle='#fff9db';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(destination.x,destination.y,9,5,0,0,Math.PI*2);ctx.stroke();}
-    label('你',position.x,position.y+26,'#36594d',10);
+    label('你',position.x,position.y+23,'#343d46',10);
     ctx.restore();
+    paintMinimap(position,playerMotion.direction,peers.values());
   }
   function tick(time) {
     if(!active)return;
@@ -147,8 +147,24 @@ export function createWorld({ onInteract, onMove }) {
       }else onMove({type:'stop'});
     }else clear();
     const blend=1-Math.exp(-22*dt);
-    if(authoritative && connected){position.x+=(authoritative.x-position.x)*blend;position.y+=(authoritative.y-position.y)*blend;}
-    for(const p of peers.values()){p.renderX+=(p.x-p.renderX)*blend;p.renderY+=(p.y-p.renderY)*blend;}
+    const oldX=position.x,oldY=position.y;
+    if(authoritative && connected){
+      if(Math.hypot(authoritative.x-position.x,authoritative.y-position.y)>100){position={x:authoritative.x,y:authoritative.y};playerMotion.moving=false;}
+      else {position.x+=(authoritative.x-position.x)*blend;position.y+=(authoritative.y-position.y)*blend;}
+    }
+    advanceMotion(playerMotion,position.x-oldX,position.y-oldY,dt);
+    if(blocked()||!connected)playerMotion.moving=false;
+    const oldPet={...petPosition};
+    const target={x:position.x-42,y:position.y+24};
+    if(Math.hypot(target.x-petPosition.x,target.y-petPosition.y)>120)petPosition=target;
+    else {const follow=1-Math.exp(-7*dt);petPosition.x+=(target.x-petPosition.x)*follow;petPosition.y+=(target.y-petPosition.y)*follow;}
+    advanceMotion(petMotion,petPosition.x-oldPet.x,petPosition.y-oldPet.y,dt,64);
+    if(blocked()||!connected)petMotion.moving=false;
+    for(const p of peers.values()){const px=p.renderX,py=p.renderY;
+      if(Math.hypot(p.x-px,p.y-py)>100){p.renderX=p.x;p.renderY=p.y;}
+      else {p.renderX+=(p.x-p.renderX)*blend;p.renderY+=(p.y-p.renderY)*blend;}
+      advanceMotion(p.motion,p.renderX-px,p.renderY-py,dt);
+    }
     updateNear();
     paint(time);frame=requestAnimationFrame(tick);
   }
@@ -156,10 +172,10 @@ export function createWorld({ onInteract, onMove }) {
     roomSnapshot(data) {
       const me=data.players.find(p=>p.id===data.selfId);
       if(!me)return;
-      if(selfId!==data.selfId){position={x:me.x,y:me.y};clear();}
+      if(selfId!==data.selfId){position={x:me.x,y:me.y};petPosition={x:me.x-42,y:me.y+24};playerMotion=createMotion();petMotion=createMotion('east');clear();}
       selfId=data.selfId;authoritative=me;
       const next=new Map();
-      for(const p of data.players)if(p.id!==data.selfId){const old=peers.get(p.id);next.set(p.id,{...p,renderX:old?.renderX??p.x,renderY:old?.renderY??p.y});}
+      for(const p of data.players)if(p.id!==data.selfId){const old=peers.get(p.id);next.set(p.id,{...p,renderX:old?.renderX??p.x,renderY:old?.renderY??p.y,motion:old?.motion??createMotion()});}
       peers=next;
       document.querySelector('#online-count').textContent=`据点在线 ${data.players.length} 人`;
       document.querySelector('#online-names').textContent=data.players.map(p=>p.nickname+(p.id===data.selfId?'（你）':'')).join('、');
@@ -174,7 +190,7 @@ export function createWorld({ onInteract, onMove }) {
       const changed=player?.userId!==data.userId;player=data;catalog=definitions;
       if(changed){position={x:480,y:452};clear();near=false;interact.hidden=true;}
       root.hidden=false;document.querySelector('#world-name').textContent=data.nickname;
-      document.querySelector('#objective').textContent=data.pets.length?'伙伴已加入 · 在据点自由探索':'去广场找引导员，选择第一位伙伴';
+      document.querySelector('#objective').textContent=data.pets.length?'伙伴已加入 · 探索星野营地':'与莱娅对话，寻找第一位伙伴';
       const companion=catalog.find(p=>p.id===data.pets[0]?.definitionId);
       document.querySelector('#team-name').textContent=companion?`${companion.name} · ${companion.role}`:'尚未领取伙伴';
       document.querySelector('#team-note').textContent=companion?'已入队 · 已自动保存':'靠近引导员后按 E 交谈';

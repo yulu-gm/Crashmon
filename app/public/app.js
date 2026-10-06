@@ -132,7 +132,7 @@ function openStarter() {
   $('#choose-starter').textContent=owned?'继续探索':'选择这位伙伴';
   $('#starter-title').textContent=owned?'伙伴已经在你的队伍里。':'每段冒险，都从相遇开始。';
   $('#starter-copy').textContent=owned?'很高兴再次见到你。可以在据点自由走走，野外探索将在后续开放。':'先认识它们，再选一位与你出发。你可以来回比较，不必急着决定。';
-  $('#starter-note').textContent=owned?'伙伴已自动保存，退出或重新登录都不会丢失。':'外观与定位为原型占位。每个账号只能领取一次，最终确认后不能重选。';
+  $('#starter-note').textContent=owned?'伙伴已自动保存，退出或重新登录都不会丢失。':'伙伴定位与技能仍在开发。每个账号只能领取一次，最终确认后不能重选。';
   if(owned) $('#starter-confirm').textContent=`${catalog.find(p=>p.id===owned.definitionId)?.name ?? owned.definitionId} · 已加入队伍`;
   else renderChoices();
   $('#starter-dialog').showModal();

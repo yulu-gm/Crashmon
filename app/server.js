@@ -12,6 +12,25 @@ export function createApp({ databasePath = resolve('data/crashmon.sqlite'), orig
   const store = openStore(databasePath, now, starters.map(p => p.id));
   const room = createRoom({ now, authenticate: store.authenticate.bind(store), profile: store.player, canWalk, speed: SPEED });
   const assets = new Map([
+    ['/minimap.js', ['minimap.js', 'text/javascript; charset=utf-8']],
+    ['/scene-layout.js', ['scene-layout.js', 'text/javascript; charset=utf-8']],
+    ['/scene-renderer.js', ['scene-renderer.js', 'text/javascript; charset=utf-8']],
+    ...['terrain','ship','station','supplies','gate','pool','props','rim'].map(name=>[`/assets/scene/${name}.png`,[`assets/scene/${name}.png`,'image/png']]),
+    ['/scene-lab', ['scene-lab.html', 'text/html; charset=utf-8']],
+    ['/scene-lab.js', ['scene-lab.js', 'text/javascript; charset=utf-8']],
+    ['/scene-lab.css', ['scene-lab.css', 'text/css; charset=utf-8']],
+    ['/animation-lab', ['animation-lab.html', 'text/html; charset=utf-8']],
+    ['/animation-lab-map.js', ['animation-lab-map.js', 'text/javascript; charset=utf-8']],
+    ['/animation-lab.js', ['animation-lab.js', 'text/javascript; charset=utf-8']],
+    ['/animation-lab.css', ['animation-lab.css', 'text/css; charset=utf-8']],
+    ['/character-motion.js', ['character-motion.js', 'text/javascript; charset=utf-8']],
+    ['/character-assets.js', ['character-assets.js', 'text/javascript; charset=utf-8']],
+    ['/character-renderer.js', ['character-renderer.js', 'text/javascript; charset=utf-8']],
+    ...['player/model','player/walk-south','player/walk-north','player/walk-west','player/walk-east',
+      'flame/model','flame/walk-south','flame/walk-north','flame/walk-west','flame/walk-east','flame/tackle','flame/sneeze']
+      .map(name=>[`/assets/characters/${name}.png`,[`assets/characters/${name}.png`,'image/png']]),
+    ['/assets/hub-coast.png', ['assets/hub-coast.png', 'image/png']],
+    ['/assets/expedition-sprites.png', ['assets/expedition-sprites.png', 'image/png']],
     ['/', ['index.html', 'text/html; charset=utf-8']],
     ['/hub-map.js', ['../shared/hub-map.js', 'text/javascript; charset=utf-8']],
     ['/room-client.js', ['room-client.js', 'text/javascript; charset=utf-8']],
