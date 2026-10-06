@@ -10,6 +10,8 @@ M3：多人同屏据点与初始伙伴本地原型已实现。登录后可移动
 
 本轮采用 Node.js 内置模块与 SQLite，不安装第三方依赖。未来游戏引擎与多人战斗形式仍待确认；当前选择与边界见[首个实现里程碑](docs/architecture/account-save-milestone.md)。
 
+2026-10-06 战斗设计已归档为[多单位回合制战斗策划案 v0.1 / B0](docs/game-design/battle-system.md)：最多四只同时上场、速度决定行动频率。详细规则与验收是原型实现输入，不表示已有战斗代码或平衡结论。
+
 ## 本地运行
 
 需要 Node.js 24+（本机实际验证 25.8.0），在仓库根目录运行：
@@ -33,6 +35,7 @@ npm start
 | 设计注册、登录、会话和账号恢复 | [账号与会话](docs/architecture/accounts-and-sessions.md) |
 | 设计用户数据、资产结算与存档 | [玩家数据与持久化](docs/architecture/player-data-and-persistence.md) |
 | 设计全局玩法规则 | [核心玩法规则](docs/game-design/core-rules.md) |
+| 设计四单位、速度、技能、捕捉与胜负 | [多单位战斗策划案](docs/game-design/battle-system.md) |
 | 设计首次冒险与 NPC 领宠流程 | [首次体验](docs/game-design/first-session.md) |
 | 定义美术、幽默表达与查看参考图 | [美术方向 v1](docs/game-design/art-direction-v1.md) |
 | 讨论首章宇宙探索内容 | [首章内容提案](docs/versions/1.0/universe-content-proposal.md) |
@@ -46,7 +49,7 @@ npm start
 ```text
 app/                 HTTP 入口与账号/档案网页
 framework/           认证、会话与 SQLite 存档实现
-content/pets/        具体宠物实现；尚未实现
+content/pets/        初始伙伴定义；正式技能与战斗规则尚未实现
 content/activities/  活动插件实现；尚未实现
 playground/          独立创作试玩环境；尚未实现
 tests/               账号与存档集成测试、公共验收规格
@@ -71,7 +74,7 @@ docs/
 
 题材与视觉方向现已进入讨论：宇宙探索、细线与柔和色块的复古幻想场景、性格幽默的伙伴。先用少量样张验证，再逐步替换占位素材；参考截图仅用于文档，不作为运行素材或授权证明。具体首章名称、种族与配色仍为提案。
 
-按本轮方向，先验证账号与存档闭环；战斗规则暂缓收束。[首次体验工作稿](docs/game-design/first-session.md)保留为后续地图、NPC 领宠与冒险实现的设计输入。
+当前开始细化战斗：依据 B0 补齐三只初始候选、两种教学捕获对象与一个首领的最小内容表，先验证单宠、双宠，再覆盖四单位与首领。[首次体验工作稿](docs/game-design/first-session.md)继续提供地图、NPC、捕捉与成长的体验输入。
 
 注册、登录、档案恢复与一次性初始领宠已接通；战斗和活动后续接入。这些不是要求玩家执行的新手任务；也不能把独立账号登录视为已经实现合作玩法。
 

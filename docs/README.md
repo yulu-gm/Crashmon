@@ -9,6 +9,7 @@
 | 玩家怎样注册、登录、退出和找回账号？ | [账号与会话](architecture/accounts-and-sessions.md) |
 | 玩家资产怎样保存、授权、结算和恢复？ | [玩家数据与持久化](architecture/player-data-and-persistence.md) |
 | 初次进入后怎样移动、领宠、探索并组成小队？ | [首次体验](game-design/first-session.md) |
+| 四单位如何行动、使用技能、捕捉与结算？ | [多单位战斗策划案](game-design/battle-system.md) |
 | 美术与幽默如何统一，参考图在哪里？ | [美术方向 v1](game-design/art-direction-v1.md)、[参考来源](game-design/references/README.md) |
 | 首章宇宙探索题材如何连接已有流程？ | [首章内容提案](versions/1.0/universe-content-proposal.md) |
 | 玩家如何组队、行动、捕捉和成长？ | [game-design/](game-design/README.md) |
@@ -26,17 +27,17 @@
 
 当前美术实现见[角色动画样本](art/character-sample.md)与[营地场景模块](art/scene-modules.md)：四方向角色、独立物件、遮挡与免登录检查页。
 
-当前可运行内容及命令见[注册、登录与存档里程碑](architecture/account-save-milestone.md)。战斗暂缓收束，先验证账号与持久化闭环。
+当前账号内容及命令见[注册、登录与存档里程碑](architecture/account-save-milestone.md)。2026-10-06 已恢复战斗设计推进，当前输入是[战斗原型基线 B0](game-design/battle-system.md)；不再把此前“暂缓战斗收束”当作当前限制。
 
 [首次体验](game-design/first-session.md)、[核心玩法规则](game-design/core-rules.md)、[1.0 内容大纲](versions/1.0/outline.md)与[底层总览](architecture/foundation-design.md)共同收敛第一条可玩流程。
 
-账号和玩家数据的详细边界已拆为两个有实际需求的专题，底层总览只保留职责和链接。上述文档目前均为 Draft，不是正式接口或已实现能力。
+账号和玩家数据的详细边界已拆为两个有实际需求的专题，底层总览只保留职责和链接。设计状态、已有局部实现与实际验证分别记录；战斗文档存在不等于战斗已经可玩。
 
 ## 单一正文与引用
 
 视觉语言、角色表达、幽默边界与跨版本制作基准维护在 game-design/art-direction-v1.md；参考图与来源只放在其 references/ 目录，不作为游戏资产。首章主题与内容组合提案放在 versions/1.0/universe-content-proposal.md；正式宠物与地图规格确认后分别进入 docs/content/，不复制多套正文。
 
-护盾在玩法上怎样计算写进核心玩法规则；服务器怎样执行和保存写进底层设计；某只宠物提供多少护盾写进宠物设计；1.0 是否包含它写进版本大纲。
+战斗时间轴、伤害和护盾规则维护在 game-design/battle-system.md；core-rules.md 只作总览。服务器怎样执行和保存写进底层设计；某只宠物提供多少护盾写进宠物设计；1.0 是否包含它写进版本大纲。B01–B30 只在战斗正文维护，由 tests/README.md 引用。
 
 账号认证、会话和恢复写进账号专题；永久数据结构、事务和备份写进数据专题；1.0 只引用它们并定义交付范围。首次移动、NPC 领宠、探索和组队教学维护在 game-design/first-session.md，1.0 引用该正文；不复制认证规则，也不把退出重登等工程验收写成玩家任务。
 
